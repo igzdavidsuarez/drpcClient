@@ -1,0 +1,6 @@
+{
+  "drpc_server":{
+    "port": 3772,
+    "host": "localhost"
+  }
+}
