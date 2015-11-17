@@ -1,17 +1,16 @@
 var nodeDrpc = require('storm-drpc-node');
-var koa = require('koa');
 var config = require('config');
-var router = require('koa-router')();
-var koaBody = require('koa-body');
-var cors = require('koa-cors');
+var express = require('express');
+var cors = require('cors');
+var bodyParser = require('body-parser');
 
-var app = koa();
+var app = express();
 
 app.use(cors());
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
 
-app.use(koaBody({formidable:{uploadDir: __dirname}}));
-
-router.post('/configuration', function *(next){
+app.post('/configuration', function (req, res){
     var options = {
         host: config.get('drpc_server.host'),
         port: config.get('drpc_server.port')
@@ -19,25 +18,16 @@ router.post('/configuration', function *(next){
     //Note : timeout is optional
     var nodeDrpcClient = nodeDrpc(options);
 
-    //const DRPC_NAME = "BDS_RPC";
+    nodeDrpcClient.execute("BDS_RPC", JSON.stringify(req.body), function(err, response) {
 
-    nodeDrpcClient.execute("BDS_RPC", JSON.stringify(this.request.body), function(err, response) {
-
-        console.log(err, response)
         if (err) {
             console.error(err);
             // implement error handling logic here
         } else {
             console.log("Storm function response :", response);
-            // implement your logic here
+            res.status(200).send(response);
         }
-        return next();
     });
 });
-
-app
-    .use(router.routes())
-    .use(router.allowedMethods());
-
 
 app.listen(3000);
